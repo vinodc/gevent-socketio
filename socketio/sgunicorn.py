@@ -193,3 +193,4 @@ class NginxGeventSocketIOWorker(GeventSocketIOWorker):
     wsgi.websocket key to the wsgi environment.
     """
     transports = ['xhr-polling']
+    policy_server = False  # Don't run the flash policy server
