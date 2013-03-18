@@ -39,6 +39,9 @@ def encode(data, json_dumps=default_json_dumps):
     payload = ''
     msg = str(MSG_TYPES[data['type']])
 
+    if 'endpoint' in data and data['endpoint'] is None:
+        data['endpoint'] = ''
+
     if msg in ['0', '1']:
         # '1::' [path] [query]
         msg += '::' + data['endpoint']
