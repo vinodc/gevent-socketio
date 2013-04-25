@@ -240,7 +240,7 @@ class WebsocketTransport(BaseTransport):
     def do_exchange(self, socket, request_method):
         websocket = self.handler.environ['wsgi.websocket']
         websocket.send("1::")  # 'connect' packet
-
+        
         def send_into_ws():
             while True:
                 message = socket.get_client_msg()
@@ -259,6 +259,8 @@ class WebsocketTransport(BaseTransport):
                 try:
                     message = websocket.receive()
                 except WebSocketError:
+                    socket.disconnect()
+                    websocket.close()
                     break;
 
                 if message is None:
