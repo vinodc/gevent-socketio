@@ -252,22 +252,23 @@ class WebsocketTransport(BaseTransport):
                 except (WebSocketError, TypeError):
                     # We can't send a message on the socket
                     # it is dead, let the other sockets know
-                    socket.disconnect()
+                    socket.kill(detach=True)
+                    websocket.close()
+                    break;
 
         def read_from_ws():
             while True:
                 try:
                     message = websocket.receive()
                 except WebSocketError:
-                    socket.disconnect()
+                    socket.kill(detach=True)
                     websocket.close()
                     break;
 
                 if message is None:
                     break
                 else:
-                    if message is not None:
-                        socket.put_server_msg(message)
+                    socket.put_server_msg(message)
 
         socket.spawn(send_into_ws)
         socket.spawn(read_from_ws)
