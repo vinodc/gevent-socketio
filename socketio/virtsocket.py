@@ -12,6 +12,7 @@ in a different way
 import random
 import weakref
 import logging
+from datetime import datetime
 
 import gevent
 from gevent.queue import Queue
@@ -80,6 +81,7 @@ class Socket(object):
         self.client_queue = Queue()  # queue for messages to client
         self.server_queue = Queue()  # queue for messages to server
         self.hits = 0
+        self.last_heartbeat = None
         self.heartbeats = 0
         self.timeout = Event()
         self.wsgi_app_greenlet = None
@@ -451,13 +453,18 @@ class Socket(object):
         """Start the heartbeat Greenlet to check connection health."""
         interval = self.config['heartbeat_interval']
         while self.connected:
+            before = datetime.now()
             gevent.sleep(interval)
+            after = datetime.now()
+            log.debug("_heartbeat for %s slept for %f" %
+                           (self.sessid,(after-before).total_seconds()))
             # TODO: this process could use a timeout object like the disconnect
             #       timeout thing, and ONLY send packets when none are sent!
             #       We would do that by calling timeout.set() for a "sending"
             #       timeout.  If we're sending 100 messages a second, there is
             #       no need to push some heartbeats in there also.
             self.put_client_msg("2::")
+            self.heartbeats += 1
 
     def _heartbeat_timeout(self):
         timeout = float(self.config['heartbeat_timeout'])
@@ -467,7 +474,11 @@ class Socket(object):
             wait_res = self.timeout.wait(timeout=timeout)
             if not wait_res:
                 if self.connected:
-                    log.debug("heartbeat timed out, killing socket")
+                    log.debug(("last heartbeat: %f secs ago (timout: %d) "+
+                                    "for %s, killing socket")
+                                   % ((datetime.now()
+                                       - self.last_heartbeat).total_seconds(),
+                                       self.sessid))
                     self.kill(detach=True)
                 return
 
