@@ -474,7 +474,7 @@ class Socket(object):
             wait_res = self.timeout.wait(timeout=timeout)
             if not wait_res:
                 if self.connected:
-                    log.debug(("last heartbeat: %f secs ago (timout: %d) "
+                    log.debug(("last heartbeat: %f secs ago (timeout: %d) "
                                     "for %s, killing socket")
                                    % ((datetime.now()
                                        - self.last_heartbeat).total_seconds(),
