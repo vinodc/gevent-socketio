@@ -222,18 +222,23 @@ class Socket(object):
         """
         # Clear out the callbacks
         self.ack_callbacks = {}
+        log.debug('Killing %s' % self)
+        self.server_queue.put_nowait(None)
+        self.client_queue.put_nowait(None)
+
         if self.connected:
             self.state = self.STATE_DISCONNECTING
-            self.server_queue.put_nowait(None)
-            self.client_queue.put_nowait(None)
             if len(self.active_ns) > 0:
                 log.debug("Calling disconnect() on %s" % self)
                 self.disconnect()
+        else:
+            log.error('Socket kill()ed before being connected')
 
         if detach:
             self.detach()
 
         gevent.killall(self.jobs)
+        log.debug('Killed %s' % self)
 
     def detach(self):
         """Detach this socket from the server. This should be done in
@@ -482,7 +487,6 @@ class Socket(object):
                                        self.sessid))
                     self.kill(detach=True)
                 return
-
 
     def _spawn_heartbeat(self):
         """This functions returns a list of jobs"""
