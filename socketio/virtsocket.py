@@ -81,7 +81,6 @@ class Socket(object):
         self.client_queue = Queue()  # queue for messages to client
         self.server_queue = Queue()  # queue for messages to server
         self.hits = 0
-        self.last_heartbeat = None
         self.heartbeats = 0
         self.timeout = Event()
         self.wsgi_app_greenlet = None
@@ -479,12 +478,10 @@ class Socket(object):
             wait_res = self.timeout.wait(timeout=timeout)
             if not wait_res:
                 if self.connected:
-                    log.debug(("last heartbeat: %f secs ago (timeout: %d) "
-                                    "for %s, killing socket")
-                                   % ((datetime.now()
-                                       - self.last_heartbeat).total_seconds(),
-                                       timeout,
-                                       self.sessid))
+                    log.debug(("Last heartbeat more than %d seconds ago"
+                                    "for %s, killing socket.")
+                                   % (timeout,
+                                      self.sessid))
                     self.kill(detach=True)
                 return
 
